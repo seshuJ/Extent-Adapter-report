@@ -1,6 +1,8 @@
 package stepdefs;
 
-import static org.junit.Assert.assertEquals;
+import static org.testng.Assert.assertEquals;
+
+//import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 import java.util.Random;
@@ -9,6 +11,7 @@ import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.testng.SkipException;
 
 import io.cucumber.java.After;
 import io.cucumber.java.AfterStep;
@@ -31,6 +34,12 @@ public class Stepdefs {
 
 	private Scenario scenario;
 
+	@Given("Hello background")
+	public void background() throws InterruptedException {
+		this.scenario.log("background");
+		Thread.sleep(250);
+	}
+
 	@Before(value = "not @failure")
 	public void before(Scenario scenario) {
 		this.scenario = scenario;
@@ -47,7 +56,6 @@ public class Stepdefs {
 
 	@Before(value = "@failure")
 	public void beforeFailure(Scenario scenario) { //
-		System.out.println("Before failure");
 		this.scenario = scenario;
 		scenario.write("FAILURE HI");
 		scenario.write("FAILURE HELLO");
@@ -56,7 +64,6 @@ public class Stepdefs {
 
 	@After(value = "@failure")
 	public void afterFailure() { //
-		System.out.println("After failure");
 		scenario.write("FAILURE HI");
 		scenario.write("FAILURE HELLO");
 		throw new RuntimeException();
@@ -64,12 +71,10 @@ public class Stepdefs {
 
 	@BeforeStep(value = "@failure")
 	public void beforeStepFailure() { //
-		System.out.println("Before Step failure");
 	}
 
 	@AfterStep(value = "@failure")
 	public void afterStepFailure() { //
-		System.out.println("After Step failure");
 	}
 
 	@Given("Hook failure step")
@@ -87,7 +92,7 @@ public class Stepdefs {
 
 	@Given("{string} background")
 	public void background(String type) throws InterruptedException {
-		System.out.format("%s type background. \n", type);
+		//System.out.format("%s type background. \n", type);
 		this.scenario.write("background");
 		Thread.sleep(250);
 	}
@@ -96,7 +101,7 @@ public class Stepdefs {
 	@When("Complete action in {string} step in {string}")
 	@Then("Validate the outcome in {string} step in {string}")
 	public void step(String step, String scenario) throws InterruptedException {
-		System.out.format("%s step from %s.\n", step.toUpperCase(), scenario.toUpperCase());
+		//System.out.format("%s step from %s.\n", step.toUpperCase(), scenario.toUpperCase());
 		this.scenario.write("log HATE THIS");
 		Thread.sleep(1000);
 	}
@@ -118,13 +123,11 @@ public class Stepdefs {
 	@Given("Customer orders the dishes")
 	public void dataTable(List<List<String>> table) throws InterruptedException {
 		Thread.sleep(4000);
-		System.out.println(table);
 	}
 
 	@Given("the doc string is")
 	public void docStr(String docStr) throws InterruptedException {
 		Thread.sleep(4000);
-		System.out.println(docStr);
 	}
 
 	private WebDriver driver;
@@ -138,7 +141,7 @@ public class Stepdefs {
 		Thread.sleep(500);
 	}
 
-	@BeforeStep(value = "@website", order = 1)
+	@BeforeStep(value = "@website or @large", order = 1)
 	public void beforeSite(Scenario scenario) {
 		this.scenario = scenario;
 
@@ -154,7 +157,7 @@ public class Stepdefs {
 		scenario.write("GOOD BYE!!! ");
 	}
 
-	@AfterStep(value = "@website", order = 2)
+	@AfterStep(value = "@website or @large", order = 2)
 	public void afterSite() {
 
 		TakesScreenshot ts = (TakesScreenshot) driver;
@@ -171,9 +174,36 @@ public class Stepdefs {
 	public void afterSite2() {
 		scenario.write("GOOD BYE!!! " + this.site);
 	}
-	
-	@Given("Pending step definition methods")
+
+	@Given("Pending step definition")
 	public void pending_step_definition_methods() {
-	    throw new PendingException();
+		throw new PendingException();
+	}
+
+	@Given("Skipped step definition")
+	public void skippedStep() {
+		throw new SkipException("SKip it");
+	}
+
+	@Given("Go to capture 2 images in one step")
+	public void twoImages() throws Exception {
+		WebDriverManager.chromedriver().setup();
+		driver = new ChromeDriver();
+		driver.manage().window().maximize();
+		Thread.sleep(500);
+
+		driver.get("https://github.com/");
+		Thread.sleep(500);
+		TakesScreenshot ts = (TakesScreenshot) driver;
+		byte[] screenshot = ts.getScreenshotAs(OutputType.BYTES);
+		scenario.attach(screenshot, "image/png", "github");
+
+		driver.get("https://stackoverflow.com/");
+		Thread.sleep(500);
+		ts = (TakesScreenshot) driver;
+		screenshot = ts.getScreenshotAs(OutputType.BYTES);
+		scenario.attach(screenshot, "image/png", "stackoverflow");
+
+		driver.quit();
 	}
 }
